@@ -133,6 +133,6 @@ TEMPLATE_DIRS = [os.path.join(BASE_DIR, 'templates')]
 
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
-EMAIL_HOST_PASSWORD ='gsuDev5681'
+EMAIL_HOST_PASSWORD =''
 EMAIL_HOST_USER = 'dev.tech24@gmail.com'
 EMAIL_PORT = 587
