@@ -1,3 +1,180 @@
-hi dev
+<!DOCTYPE html >
+<html>
+<head>
+    <title>Almabase Uber Booking notifier</title>
+    {% load staticfiles %}
+    <link rel="stylesheet" href="{% static 'css/bootstrap.css' %}">
+    <link rel="stylesheet" href="{% static 'css/timepicker.css' %}">
+</head>
+<body>
 
-{{ data }}
+<script src="{% static 'js/jquery.js' %}"></script> 
+<script src="{% static 'js/bootstrap-timepicker.js' %}"></script> 
+
+<script type="text/javascript"  src="http://maps.googleapis.com/maps/api/js?key=AIzaSyB6ky0s6kmaxH15hsxsNHKuZeI6n_OG2eA&sensor=false&libraries=places">
+</script>
+<script type="text/javascript">
+        var source, destination;
+        var directionsDisplay;
+        var directionsService = new google.maps.DirectionsService();
+      
+        
+        function initialize() {
+           new google.maps.places.SearchBox(document.getElementById('Sourcetxtfield'));
+           new google.maps.places.SearchBox(document.getElementById('Destinationtxtfield'));            
+           directionsDisplay = new google.maps.DirectionsRenderer({ 'draggable': true });
+
+           var warangal = new google.maps.LatLng(18.0000,79.5800);
+            var mapOptions = {
+                zoom: 7,
+                center: warangal
+            };
+            map = new google.maps.Map(document.getElementById('divMap'), mapOptions);
+            directionsDisplay.setMap(map);
+            directionsDisplay.setPanel(document.getElementById('divDirectionsDisp'));
+
+        }
+
+        function getDistanceTime(){
+        	source = document.getElementById("Sourcetxtfield").value;
+            destination = document.getElementById("Destinationtxtfield").value;
+            var service = new google.maps.DistanceMatrixService();
+            service.getDistanceMatrix({
+                origins: [source],
+                destinations: [destination],
+                travelMode: google.maps.TravelMode.DRIVING,
+                unitSystem: google.maps.UnitSystem.METRIC,
+                avoidHighways: false,
+                avoidTolls: false
+            }, function (response, status) {
+                if (status == google.maps.DistanceMatrixStatus.OK && response.rows[0].elements[0].status != "ZERO_RESULTS") {
+                    var distance = response.rows[0].elements[0].distance.text;
+                    var duration = response.rows[0].elements[0].duration.text;
+                    var divDistance = document.getElementById("divDistance");
+                    divDistance.innerHTML = "";
+                    divDistance.innerHTML += "Distance: " + distance + "<br />";
+                    divDistance.innerHTML += "Duration:" + duration;
+
+
+                    //save place
+
+
+
+                } else {
+                   alert("Unable to find the distance through Road !!! ");
+               }
+            });
+        }
+
+       function setRemainder(){ 
+
+       	var data={};
+       	data['src_lat']=  $('#Sourcetxtfield').val().split(',')[0];
+       	data['src_lng']=  $('#Sourcetxtfield').val().split(',')[1];
+       	data['dest_lat']=  $('#Destinationtxtfield').val().split(',')[0];
+       	data['dest_lng']=  $('#Destinationtxtfield').val().split(',')[1];
+       	data['dest_time'] = $('#dest_time').val().split(':');
+       	data['email'] =$('#email').val();
+
+       	var today = new Date();
+       	today.setHours(	data['dest_time'][0]);
+       	today.setMinutes(data['dest_time'][1]);
+       	today.setSeconds(0);
+        today =today.toLocaleString();
+         console.log(today);
+       	
+       	data['remainder_time']= Math.floor(today.getTime()/1000);
+       	
+
+
+
+       	 var json_data = JSON.stringify(data); 
+       	 console.log(json_data);          
+            
+            
+             $.ajax({
+                        "url": 'routes/setRemainder/',
+                        "type": "POST",
+                        "datatype" : 'json',
+                        "data": {csrfmiddlewaretoken: '{{ csrf_token }}','uber_info' : json_data},
+                        success: function(data)
+                        {                          
+                           result_data = JSON.parse(data);                         
+                            
+                             if(result_data.length == 0){
+                                                  
+                             }
+                             else
+                             {
+                              
+                             }
+                           
+                        }
+                    });
+        
+
+        
+      }
+       
+      
+
+
+google.maps.event.addDomListener(window, 'load', initialize);
+</script>
+
+    <div class="container">
+
+
+
+{% load staticfiles %}
+
+    <h1>Almabase Uber Booking Notifier</h1>
+
+    <div class="col-md-12">
+            <div class="col-md-3">
+                 <input class="form-control" type="text" id="Sourcetxtfield"  placeholder="Enter source" value="12.927880, 77.627600" />
+            </div>
+
+            <div class="col-md-3">
+                 <input class="form-control" type="text" id="Destinationtxtfield"  placeholder="Enter Destination" value="13.035542, 77.597100"  />
+            </div>
+
+             <div class="col-md-3">
+                 <input  class="input-group bootstrap-timepicker timepicker" type="text" id="dest_time" placeholder="Enter Time to reach destination 24 hrs hh:mm"  />
+                 <!--  <span class="input-group-addon"><i class="glyphicon glyphicon-time"></i></span> --> 
+            </div>
+ 
+             <div class="col-md-3">
+                 <input class="form-control" type="email" id="email" placeholder="Enter email"  />
+            </div>
+
+
+           
+
+    </div>
+
+    <div class="col-md-12">
+<br>
+     <div class="col-md-3 pull-right">
+        <input class="btn btn-primary" type="button" onclick="setRemainder()" value="Remind Me" />
+     </div>
+
+    <div class="col-md-3" id="divDistance"> </div>   
+        
+    </div>
+
+     <div  class="col-md-8" id="divMap" style="height: 500px">  </div>
+</div>
+
+
+
+</body>
+</html>
+
+
+<!--
+
+<script type="text/javascript">
+	
+	$('#dest_time').timepicker();
+</script>-->
