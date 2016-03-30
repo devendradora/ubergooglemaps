@@ -1,3 +1,4 @@
+S
 <!DOCTYPE html >
 <html>
 <head>
@@ -36,7 +37,7 @@
         }
 
         function getDistanceTime(){
-        	source = document.getElementById("Sourcetxtfield").value;
+        	  source = document.getElementById("Sourcetxtfield").value;
             destination = document.getElementById("Destinationtxtfield").value;
             var service = new google.maps.DistanceMatrixService();
             service.getDistanceMatrix({
@@ -66,7 +67,7 @@
             });
         }
 
-       function setRemainder(){ 
+       function setReminder(){ 
 
        	var data={};
        	data['src_lat']=  $('#Sourcetxtfield').val().split(',')[0];
@@ -75,39 +76,64 @@
        	data['dest_lng']=  $('#Destinationtxtfield').val().split(',')[1];
        	data['dest_time'] = $('#dest_time').val().split(':');
        	data['email'] =$('#email').val();
+     
+       	var dest_unixtime= new Date();
+       	dest_unixtime.setHours(	data['dest_time'][0]);
+       	dest_unixtime.setMinutes(data['dest_time'][1]);
+       	dest_unixtime.setSeconds(0);
 
-       	var today = new Date();
-       	today.setHours(	data['dest_time'][0]);
-       	today.setMinutes(data['dest_time'][1]);
-       	today.setSeconds(0);
-        today =today.toLocaleString();
-         console.log(today);
+        dest_unixtime=Math.floor(dest_unixtime.getTime()/1000)+19800;
+
+        data['dest_time'] = ""+dest_unixtime;
+
+            source = document.getElementById("Sourcetxtfield").value;
+            destination = document.getElementById("Destinationtxtfield").value;
+            var service = new google.maps.DistanceMatrixService();
+            service.getDistanceMatrix({
+                origins: [source],
+                destinations: [destination],
+                travelMode: google.maps.TravelMode.DRIVING,
+                unitSystem: google.maps.UnitSystem.METRIC,
+                avoidHighways: false,
+                avoidTolls: false
+            }, function (response, status) {
+                if (status == google.maps.DistanceMatrixStatus.OK && response.rows[0].elements[0].status != "ZERO_RESULTS") {
+                    var distance = response.rows[0].elements[0].distance.text;
+                    var duration = response.rows[0].elements[0].duration.text;
+                    var duration_seconds =response.rows[0].elements[0].duration.value;
+                    var divDistance = document.getElementById("divDistance");
+                    divDistance.innerHTML = "";
+                    divDistance.innerHTML += "Distance: " + distance + "<br />";
+                    divDistance.innerHTML += "Duration:" + duration;
+                    
+                     //divDistance.innerHTML += "Duration:" + duration_seconds;
+                     document.getElementById('reminder_time').value= dest_unixtime - duration_seconds;
+                  
+
+                } else {
+                   alert("Unable to find the distance through Road !!! ");
+               }
+            });
+
+       
        	
-       	data['remainder_time']= Math.floor(today.getTime()/1000);
-       	
 
-
+        data['reminder_time'] = $('#reminder_time').val();
 
        	 var json_data = JSON.stringify(data); 
        	 console.log(json_data);          
             
             
              $.ajax({
-                        "url": 'routes/setRemainder/',
+                        "url": 'setReminder',
                         "type": "POST",
                         "datatype" : 'json',
                         "data": {csrfmiddlewaretoken: '{{ csrf_token }}','uber_info' : json_data},
                         success: function(data)
                         {                          
-                           result_data = JSON.parse(data);                         
+                           //result_data = JSON.parse(data);                         
                             
-                             if(result_data.length == 0){
-                                                  
-                             }
-                             else
-                             {
-                              
-                             }
+                            console.log(data);
                            
                         }
                     });
@@ -128,8 +154,8 @@ google.maps.event.addDomListener(window, 'load', initialize);
 
 {% load staticfiles %}
 
-    <h1>Almabase Uber Booking Notifier</h1>
-
+   <h1>Almabase Uber Booking Notifier</h1>
+ 
     <div class="col-md-12">
             <div class="col-md-3">
                  <input class="form-control" type="text" id="Sourcetxtfield"  placeholder="Enter source" value="12.927880, 77.627600" />
@@ -140,8 +166,9 @@ google.maps.event.addDomListener(window, 'load', initialize);
             </div>
 
              <div class="col-md-3">
-                 <input  class="input-group bootstrap-timepicker timepicker" type="text" id="dest_time" placeholder="Enter Time to reach destination 24 hrs hh:mm"  />
-                 <!--  <span class="input-group-addon"><i class="glyphicon glyphicon-time"></i></span> --> 
+             Destination
+                 <input  class="input-group bootstrap-timepicker timepicker" type="text" id="dest_time" placeholder="hh:mm 24 hrs"  />
+                 
             </div>
  
              <div class="col-md-3">
@@ -156,7 +183,7 @@ google.maps.event.addDomListener(window, 'load', initialize);
     <div class="col-md-12">
 <br>
      <div class="col-md-3 pull-right">
-        <input class="btn btn-primary" type="button" onclick="setRemainder()" value="Remind Me" />
+        <input class="btn btn-primary" type="button" onclick="setReminder()" value="Remind Me" />
      </div>
 
     <div class="col-md-3" id="divDistance"> </div>   
@@ -164,6 +191,7 @@ google.maps.event.addDomListener(window, 'load', initialize);
     </div>
 
      <div  class="col-md-8" id="divMap" style="height: 500px">  </div>
+      <input class="form-control" type="text" id="reminder_time"  />
 </div>
 
 
@@ -172,9 +200,10 @@ google.maps.event.addDomListener(window, 'load', initialize);
 </html>
 
 
-<!--
+
 
 <script type="text/javascript">
 	
-	$('#dest_time').timepicker();
-</script>-->
+	//$('#dest_time').timepicker();
+
+</script>

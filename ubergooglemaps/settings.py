@@ -1,3 +1,4 @@
+
 """
 Django settings for ubergooglemaps project.
 
@@ -135,4 +136,3 @@ EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_HOST_PASSWORD ='gsuDev5681'
 EMAIL_HOST_USER = 'dev.tech24@gmail.com'
 EMAIL_PORT = 587
-EMAIL_USE_TLS = True
